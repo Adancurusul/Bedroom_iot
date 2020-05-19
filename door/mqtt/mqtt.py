@@ -8,9 +8,12 @@ import random
 SSID='adan'
 PASSWORD='313115249'
 door=Pin(2, Pin.OUT, value=0)
-SERVER='adancurusul.picp.net'
+SERVER='103.125.251.75'
 CLIENT_ID='whatever'
+topic_check = b'check'
+check_sentence=b'servo_on'
 TOPIC=b'opendoor'
+TOPIC_DOOR=b'signal'
 TOPIC_R= b'state'
 TOPIC2=b'key'
 username='123123'
@@ -45,10 +48,17 @@ def sub_cb(topic, msg):
 
     if msg ==key_now:
             door.value(1)
-            #c.publish(TOPIC2,'on',retain=True)
+            c.publish(TOPIC2,'on',retain=True)
             print("on")
             time.sleep(1)
             door.value(0)
+    elif topic==b'signal' and msg == b'right':
+            door.value(1)
+            c.publish(TOPIC2,'on',retain=True)
+            print("on")
+            time.sleep(1)
+            door.value(0)
+
 
 
     else:
@@ -69,10 +79,15 @@ try:
     c.set_callback(sub_cb)
     c.connect()
     c.subscribe(TOPIC)
+    c.subscribe(TOPIC_DOOR)
     key_of_door =str(random.randint(10000,99999))
     c.publish(TOPIC2,key_of_door,retain=True)
+    c.publish(topic_check,check_sentence,retain=True)
+    keepalive = Timer(2)
+    keepalive.init(period=120000, mode=Timer.PERIODIC, callback=lambda t: c.ping())#保持存活
     print('Connected to %s, subscribed to %s topic' % (server, TOPIC))
     while True:
+
         if check_p ==1:
             check_p =0
 
@@ -93,3 +108,5 @@ finally:
         c.disconnect()
     wlan.disconnect()
     wlan.active(False)
+
+
